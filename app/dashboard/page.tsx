@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
@@ -33,7 +33,6 @@ export default function DashboardPage() {
         router.push("/login");
         return;
       }
-
       setEmail(data.user.email ?? "");
 
       const { data: rows, error } = await supabase
@@ -54,32 +53,31 @@ export default function DashboardPage() {
   }
 
   async function deleteRow(id: string) {
+    // PROVE this function runs
+    alert("deleteRow START id: " + id);
+    console.log("deleteRow START id:", id);
+
     setMsg(null);
 
     const { data, error } = await supabase
       .from("submissions")
       .delete()
       .eq("id", id)
-      .select(); // makes errors + RLS issues obvious
+      .select(); // force PostgREST to return data + clearer errors
 
     console.log("DELETE result:", { data, error });
+    alert(
+      error
+        ? `Delete failed: ${error.message}`
+        : `Delete succeeded. Deleted rows: ${data?.length ?? 0}`
+    );
 
     if (error) {
       setMsg(error.message);
-      alert(`Delete failed: ${error.message}`);
       return;
     }
 
-    // If no rows were returned, the delete didn't actually affect anything
-    // (most commonly RLS, or the id didn't match what you think).
-    if (!data || data.length === 0) {
-      const m = "Delete ran but 0 rows were affected (likely RLS policy issue).";
-      setMsg(m);
-      alert(m);
-      return;
-    }
-
-    // Only update UI after confirmed delete
+    // Update UI immediately
     setItems((prev) => prev.filter((x) => x.id !== id));
   }
 
@@ -152,6 +150,7 @@ export default function DashboardPage() {
                   <th style={th}></th>
                 </tr>
               </thead>
+
               <tbody>
                 {items.map((x) => (
                   <tr key={x.id}>
@@ -160,7 +159,15 @@ export default function DashboardPage() {
                     <td style={td}>{x.difficulty}</td>
                     <td style={td}>{x.minutes_spent}</td>
                     <td style={tdRight}>
-                      <button onClick={() => deleteRow(x.id)} style={{ textDecoration: "underline" }}>
+                      <button
+                        onClick={() => {
+                          // PROVE the click handler fires
+                          alert("Clicked delete for id: " + x.id);
+                          console.log("DELETE clicked for id:", x.id);
+                          deleteRow(x.id);
+                        }}
+                        style={{ textDecoration: "underline" }}
+                      >
                         Delete
                       </button>
                     </td>
