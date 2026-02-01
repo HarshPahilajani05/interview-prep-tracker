@@ -33,6 +33,7 @@ export default function DashboardPage() {
         router.push("/login");
         return;
       }
+
       setEmail(data.user.email ?? "");
 
       const { data: rows, error } = await supabase
@@ -54,22 +55,31 @@ export default function DashboardPage() {
 
   async function deleteRow(id: string) {
     setMsg(null);
+
     const { data, error } = await supabase
-  .from("submissions")
-  .delete()
-  .eq("id", id)
-  .select(); // forces PostgREST to return something + makes errors clearer
+      .from("submissions")
+      .delete()
+      .eq("id", id)
+      .select(); // makes errors + RLS issues obvious
 
-console.log("DELETE result:", { data, error });
+    console.log("DELETE result:", { data, error });
 
-if (error) {
-  alert(`Delete failed: ${error.message}`);
-  return;
-}
     if (error) {
       setMsg(error.message);
+      alert(`Delete failed: ${error.message}`);
       return;
     }
+
+    // If no rows were returned, the delete didn't actually affect anything
+    // (most commonly RLS, or the id didn't match what you think).
+    if (!data || data.length === 0) {
+      const m = "Delete ran but 0 rows were affected (likely RLS policy issue).";
+      setMsg(m);
+      alert(m);
+      return;
+    }
+
+    // Only update UI after confirmed delete
     setItems((prev) => prev.filter((x) => x.id !== id));
   }
 
@@ -103,8 +113,12 @@ if (error) {
         </div>
 
         <div style={{ display: "flex", gap: 12 }}>
-          <a href="/log" style={{ textDecoration: "underline" }}>Log a solve</a>
-          <button onClick={logout} style={{ textDecoration: "underline" }}>Logout</button>
+          <a href="/log" style={{ textDecoration: "underline" }}>
+            Log a solve
+          </a>
+          <button onClick={logout} style={{ textDecoration: "underline" }}>
+            Logout
+          </button>
         </div>
       </div>
 
@@ -146,10 +160,7 @@ if (error) {
                     <td style={td}>{x.difficulty}</td>
                     <td style={td}>{x.minutes_spent}</td>
                     <td style={tdRight}>
-                      <button
-                        onClick={() => deleteRow(x.id)}
-                        style={{ textDecoration: "underline" }}
-                      >
+                      <button onClick={() => deleteRow(x.id)} style={{ textDecoration: "underline" }}>
                         Delete
                       </button>
                     </td>
