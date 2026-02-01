@@ -54,7 +54,18 @@ export default function DashboardPage() {
 
   async function deleteRow(id: string) {
     setMsg(null);
-    const { error } = await supabase.from("submissions").delete().eq("id", id);
+    const { data, error } = await supabase
+  .from("submissions")
+  .delete()
+  .eq("id", id)
+  .select(); // forces PostgREST to return something + makes errors clearer
+
+console.log("DELETE result:", { data, error });
+
+if (error) {
+  alert(`Delete failed: ${error.message}`);
+  return;
+}
     if (error) {
       setMsg(error.message);
       return;
