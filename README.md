@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Interview Prep Tracker + Analytics Dashboard
 
-## Getting Started
+A full-stack web app to log LeetCode/interview practice, track streaks, and view simple analytics (solves by difficulty + minutes logged). Built with Next.js + Supabase and deployed on Vercel.
 
-First, run the development server:
+## Live App
+- https://interview-prep-tracker-vercel.vercel.app/login
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
+- Email/password authentication (Supabase Auth)
+- Log solves (problem slug, difficulty, minutes, date, notes)
+- Dashboard stats (streak, minutes logged, difficulty breakdown)
+- Create + delete entries
+- Per-user data isolation via Supabase Row Level Security (RLS)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
+- Next.js (App Router) + TypeScript
+- Supabase (Postgres, Auth, RLS)
+- Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Local Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1) Install
+- npm install
 
-## Learn More
+### 2) Add environment variables
+Create a file named `.env.local` in the project root and add:
 
-To learn more about Next.js, take a look at the following resources:
+NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL  
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3) Run
+- npm run dev
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open: http://localhost:3000
 
-## Deploy on Vercel
+## Deployment (Vercel)
+This project is deployed on Vercel. In the Vercel dashboard, set these environment variables for Production/Preview:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Then deploy/redeploy.
+
+## Database & RLS Policies
+RLS policies are saved in:
+- `supabase/rls.sql`
+
+These policies enforce per-user access for the `submissions` table:
+- users can SELECT only their rows
+- users can INSERT only rows where `user_id = auth.uid()`
+- users can DELETE only their rows
+
+If delete ever “does nothing”, it’s usually missing the DELETE policy (RLS).
